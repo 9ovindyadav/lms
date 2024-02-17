@@ -1,0 +1,59 @@
+version: '0.0.1'
+
+services:
+  app:
+    build:
+      args:
+        user: lms
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    container_name: lms-php
+    restart: always
+    working_dir: /home/app/
+    volumes:
+      - ./:/home/app
+    environment:
+      - APP_ENV=local
+    networks:
+      - lms
+
+  nginx:
+    image: nginx:1.19-alpine
+    container_name: lms-nginx
+    restart: always
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/etc/nginx/conf.d
+      - ./:/home/app
+    networks:
+      - lms
+  
+  db:
+    image: mysql:8.0
+    container_name: lms-db
+    restart: always
+    volumes:
+      - ./storage/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    networks:
+      - lms
+  
+  phpmyadmin:
+    container_name: lms-phpmyadmin
+    image: phpmyadmin:5.0
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - lms
+  
+networks:
+  lms:
+    driver: bridge
